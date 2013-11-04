@@ -4,6 +4,8 @@ apply plugin: 'eclipse'
 sourceCompatibility = 1.6
 version = '0.1'
 
+def mainClass = "kafka.etl.impl.SimpleKafkaETLJob"
+
 jar {
   from {
   	configurations.deploy.collect { it.isDirectory() ? it : zipTree(it) }
@@ -38,4 +40,29 @@ dependencies {
     deploy 'org.scala-lang:scala-library:2.9.2'
     deploy 'com.fasterxml.jackson.core:jackson-core:2.2.3'
     deploy 'com.fasterxml.jackson.core:jackson-databind:2.2.3'
+}
+
+def executeOnShell(String command) {
+	def process = new ProcessBuilder(command.split(' '))
+                                    .redirectErrorStream(true) 
+                                    .start()
+	process.inputStream.eachLine {println it}
+	process.waitFor();
+	
+	return process.exitValue()
+}
+
+task hadoopJar << {
+	
+	
+	def propertyFile =  System.properties['propertyFile']
+	
+	def rjar = new File('.').getAbsoluteFile().toURI().relativize(jar.archivePath.toURI()).getPath();
+	
+	def cmd = "hadoop jar ${rjar} ${mainClass} ${propertyFile}"
+	
+	println "Running: ${cmd}"
+	
+	executeOnShell cmd
+	
 }

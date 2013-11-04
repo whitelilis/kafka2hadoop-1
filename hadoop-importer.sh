@@ -54,6 +54,6 @@ else
    echo "Importing topic '${topic}' to HDFS directory: ${hdfs_dir}/${bucket_name}"
    echo "***************************************************************************************************************************"
 
-   ./run-class.sh kafka.etl.impl.SimpleKafkaETLJob ${generated_property_file}
+   ./gradlew hadoopJar -DpropertyFile=${generated_property_file}
 fi
 
