@@ -24,6 +24,7 @@ Run
 	$ topic=<topic> hdfs_dir=<target> generated_property_file=<properties> list_of_brokers=<brokers> ./hadoop-importer.sh
 
 where:
+
 	<topic> 	 	well, topic name
 	<target>		root for the events, like /events
 	<properties>	properties file
