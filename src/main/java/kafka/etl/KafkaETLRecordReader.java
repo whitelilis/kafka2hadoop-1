@@ -210,10 +210,12 @@ public class KafkaETLRecordReader implements RecordReader<KafkaETLKey, BytesWrit
 		
 		JsonNode root = jsonMapper.readTree(bytes);
 		
-		double ts = root.get("timestamp").asDouble();
-					
-		earliestTimestamp = Math.min(earliestTimestamp, ts);
-		latestTimestamp = Math.max(latestTimestamp, ts);
+		if (root.has("timestamp")) {
+			double ts = root.get("timestamp").asDouble();
+						
+			earliestTimestamp = Math.min(earliestTimestamp, ts);
+			latestTimestamp = Math.max(latestTimestamp, ts);
+		}
 		
 		if (root.has("p_ctr") && root.get("p_ctr").isBoolean()) {
 			((ObjectNode)root).set("p_ctr", ZERO_DOUBLE_NODE);
