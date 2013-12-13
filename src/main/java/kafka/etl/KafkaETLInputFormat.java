@@ -90,6 +90,11 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 			
 			ArrayList<KafkaETLInputSplit> requestSplits = getSplits(request, offsets, earliest);
 			
+			if (requestSplits.isEmpty()) {
+				System.out.println("Nothing to do for request: " +request);
+				continue;
+			}
+			
 			KafkaETLInputSplit last = requestSplits.get(requestSplits.size()-1);
 			last.setPersistOffsetsEnabled(true);
 			
