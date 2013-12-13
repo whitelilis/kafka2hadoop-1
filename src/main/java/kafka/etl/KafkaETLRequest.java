@@ -114,6 +114,10 @@ public class KafkaETLRequest {
         return toString(_offset);
     }
     
+    public String getUniqueID() {
+    	return _uri.getHost()+"_"+_uri.getPort()+"_"+_topic+"_"+_partition;
+    }
+    
 
     public String toString (long offset) {
     

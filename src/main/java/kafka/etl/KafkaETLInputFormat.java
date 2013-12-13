@@ -115,7 +115,7 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 		String offsetString = request.toString();
 
 		@SuppressWarnings("unchecked")
-		OutputCollector<KafkaETLKey, BytesWritable> offsetOut = (OutputCollector<KafkaETLKey, BytesWritable>) mos.getCollector("offsets", Reporter.NULL);
+		OutputCollector<KafkaETLKey, BytesWritable> offsetOut = (OutputCollector<KafkaETLKey, BytesWritable>) mos.getCollector("offsets", request.getUniqueID(), Reporter.NULL);
 		offsetOut.collect(kafka.etl.KafkaETLRecordReader.DUMMY_KEY, new BytesWritable(offsetString.getBytes("UTF-8")));
 	}
 
