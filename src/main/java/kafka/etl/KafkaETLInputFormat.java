@@ -112,11 +112,9 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 	}
 
 	private void dumpLastOffsetToNewJobDirectory(KafkaETLRequest request) throws IOException, UnsupportedEncodingException {
-		String offsetString = request.toString();
-
 		@SuppressWarnings("unchecked")
 		OutputCollector<KafkaETLKey, BytesWritable> offsetOut = (OutputCollector<KafkaETLKey, BytesWritable>) mos.getCollector("offsets", request.getUniqueID(), Reporter.NULL);
-		offsetOut.collect(kafka.etl.KafkaETLRecordReader.DUMMY_KEY, new BytesWritable(offsetString.getBytes("UTF-8")));
+		offsetOut.collect(kafka.etl.KafkaETLRecordReader.DUMMY_KEY, new BytesWritable(request.toString().getBytes("UTF-8")));
 	}
 
 	private ArrayList<KafkaETLInputSplit> getSplits(KafkaETLRequest request, long[] offsets, long earliest) {

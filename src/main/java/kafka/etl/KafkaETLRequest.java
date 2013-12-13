@@ -115,7 +115,7 @@ public class KafkaETLRequest {
     }
     
     public String getUniqueID() {
-    	return _uri.getHost()+"_"+_uri.getPort()+"_"+_topic+"_"+_partition;
+    	return _uri.getHost().replace('.',  '_')+"_"+_uri.getPort()+"_"+_topic+"_"+_partition;
     }
     
 
