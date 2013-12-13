@@ -29,6 +29,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.*;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.lib.*;
 
 public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritable> {
 
@@ -41,6 +42,7 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 	private int maxKafkaLogFilesPerMapper;
 
 	private int maxMappersPerRequest;
+	private MultipleOutputs mos;
 
 	@Override
 	public RecordReader<KafkaETLKey, BytesWritable> getRecordReader(InputSplit split, JobConf conf, Reporter reporter) throws IOException {
@@ -50,6 +52,7 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 	@Override
 	public InputSplit[] getSplits(JobConf conf, int hint) throws IOException {
 		
+		this.mos = new MultipleOutputs(conf);
 		readProps(conf);
 		
 		List<KafkaETLRequest> requests = readRequestsFromInputs(conf);
@@ -92,6 +95,7 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 			
 			if (requestSplits.isEmpty()) {
 				System.out.println("Nothing to do for request: " +request);
+				dumpLastOffsetToNewJobDirectory(request);
 				continue;
 			}
 			
@@ -105,6 +109,14 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 		
 
 		return splits.toArray(new InputSplit[splits.size()]);
+	}
+
+	private void dumpLastOffsetToNewJobDirectory(KafkaETLRequest request) throws IOException, UnsupportedEncodingException {
+		String offsetString = request.toString();
+
+		@SuppressWarnings("unchecked")
+		OutputCollector<KafkaETLKey, BytesWritable> offsetOut = (OutputCollector<KafkaETLKey, BytesWritable>) mos.getCollector("offsets", Reporter.NULL);
+		offsetOut.collect(kafka.etl.KafkaETLRecordReader.DUMMY_KEY, new BytesWritable(offsetString.getBytes("UTF-8")));
 	}
 
 	private ArrayList<KafkaETLInputSplit> getSplits(KafkaETLRequest request, long[] offsets, long earliest) {
