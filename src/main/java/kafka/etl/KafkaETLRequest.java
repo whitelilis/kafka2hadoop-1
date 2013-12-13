@@ -113,11 +113,6 @@ public class KafkaETLRequest {
     public String toString() {
         return toString(_offset);
     }
-    
-    public String getUniqueID() {
-    	return ""+toString().hashCode();
-    }
-    
 
     public String toString (long offset) {
     

@@ -42,7 +42,6 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 	private int maxKafkaLogFilesPerMapper;
 
 	private int maxMappersPerRequest;
-	private MultipleOutputs mos;
 
 	@Override
 	public RecordReader<KafkaETLKey, BytesWritable> getRecordReader(InputSplit split, JobConf conf, Reporter reporter) throws IOException {
@@ -52,7 +51,6 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 	@Override
 	public InputSplit[] getSplits(JobConf conf, int hint) throws IOException {
 		
-		this.mos = new MultipleOutputs(conf);
 		readProps(conf);
 		
 		List<KafkaETLRequest> requests = readRequestsFromInputs(conf);
@@ -93,12 +91,6 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 			
 			ArrayList<KafkaETLInputSplit> requestSplits = getSplits(request, offsets, earliest);
 			
-			if (requestSplits.isEmpty()) {
-				System.out.println("Nothing to do for request: " +request);
-				dumpLastOffsetToNewJobDirectory(request);
-				continue;
-			}
-			
 			KafkaETLInputSplit last = requestSplits.get(requestSplits.size()-1);
 			last.setPersistOffsetsEnabled(true);
 			
@@ -109,12 +101,6 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 		
 
 		return splits.toArray(new InputSplit[splits.size()]);
-	}
-
-	private void dumpLastOffsetToNewJobDirectory(KafkaETLRequest request) throws IOException, UnsupportedEncodingException {
-		@SuppressWarnings("unchecked")
-		OutputCollector<KafkaETLKey, BytesWritable> offsetOut = (OutputCollector<KafkaETLKey, BytesWritable>) mos.getCollector("offsets", request.getUniqueID(), Reporter.NULL);
-		offsetOut.collect(kafka.etl.KafkaETLRecordReader.DUMMY_KEY, new BytesWritable(request.toString().getBytes("UTF-8")));
 	}
 
 	private ArrayList<KafkaETLInputSplit> getSplits(KafkaETLRequest request, long[] offsets, long earliest) {
@@ -140,6 +126,9 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 
 			addSplit(request, requestSplits, offset, offsets[i - dec] - offset);
 
+		}
+		if (requestSplits.isEmpty()) {
+			addSplit(request, requestSplits, request.getOffset(), 0);
 		}
 		return requestSplits;
 	}
