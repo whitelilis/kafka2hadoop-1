@@ -78,6 +78,8 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 	private InputSplit[] getSplitsFromRequests(List<KafkaETLRequest> requests) throws IOException, Exception {
 
 		ArrayList<InputSplit> splits = new ArrayList<InputSplit>();
+		
+		int emptyRequest = 0;
 
 		for (KafkaETLRequest request : requests) {
 			
@@ -91,12 +93,21 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 			
 			ArrayList<KafkaETLInputSplit> requestSplits = getSplits(request, offsets, earliest);
 			
+			if (requestSplits.isEmpty()) {
+				emptyRequest++;
+				addSplit(request, requestSplits, request.getOffset(), 0);
+			}
+			
 			KafkaETLInputSplit last = requestSplits.get(requestSplits.size()-1);
 			last.setPersistOffsetsEnabled(true);
 			
 			System.out.println("Deviding the remaining " + humanReadableByteCount(last.getOffset()+last.getLength()-earliest) + " in " + requestSplits.size() + " map tasks");
 			
 			splits.addAll(requestSplits);
+		}
+		
+		if (emptyRequest == requests.size()) {
+			throw new IllegalStateException("Nothing to read from the given sources.");
 		}
 		
 
@@ -126,9 +137,6 @@ public class KafkaETLInputFormat implements InputFormat<KafkaETLKey, BytesWritab
 
 			addSplit(request, requestSplits, offset, offsets[i - dec] - offset);
 
-		}
-		if (requestSplits.isEmpty()) {
-			addSplit(request, requestSplits, request.getOffset(), 0);
 		}
 		return requestSplits;
 	}
